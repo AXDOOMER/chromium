@@ -2,7 +2,7 @@ steps:
   - label: ":pipeline: Generate pipeline"
     key: generate-pipeline
     checkout:
-      skip: true
+      depth: 1
     secrets:
       - GITLAB_TOKEN
     command: |
@@ -13,12 +13,6 @@ steps:
         unset GITLAB_TOKEN
       }
       trap cleanup EXIT
-
-      # Buildkite's own checkout is skipped above: its clone-flag overrides are
-      # ignored unless the agent runs with checkout-override-mode=none, so a full
-      # non-shallow clone of this multi-gigabyte repo would otherwise happen here.
-      git clone --depth 1 https://github.com/AXDOOMER/chromium.git .
-        echo "Chromium repository shallow-cloned"
 
       test -n "$$GITLAB_TOKEN"
       echo "GitLab token received"
