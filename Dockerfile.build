@@ -1,0 +1,27 @@
+FROM ubuntu:24.04
+
+RUN apt update && apt install -y bash-completion sudo binutils-mips-linux-gnu wget make python3 libcapstone-dev pkg-config build-essential lsb-release file software-properties-common
+RUN apt install -y libpango1.0-dev libcogl-pango-dev libjpeg-dev
+
+RUN add-apt-repository ppa:git-core/ppa && apt update && apt install -y git
+
+RUN mkdir /root/chromium_tools /root/chromium
+RUN git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git --depth 1 /root/chromium_tools
+ENV PATH="$PATH:/root/chromium_tools"
+ENV GCLIENT_SUPPRESS_GIT_VERSION_WARNING=1
+
+WORKDIR /
+RUN fetch --nohooks --nohistory chromium
+
+RUN /src/build/install-build-deps.sh
+
+RUN cd /src && gclient runhooks
+
+RUN mkdir -p /src/out/Default && \
+    printf 'is_debug = false\nsymbol_level = 0\nis_component_build = true\n' > /src/out/Default/args.gn
+
+RUN cd /src && gn gen out/Default
+
+RUN cd /src && autoninja -C out/Default chrome
+
+CMD ["/bin/bash"]

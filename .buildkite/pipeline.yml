@@ -1,0 +1,37 @@
+steps:
+  - label: ":pipeline: Generate pipeline"
+    key: generate-pipeline
+    secrets:
+      - GITLAB_TOKEN
+    command: |
+      set -eu
+      generator_dir="$$(mktemp -d)"
+      cleanup() {
+        rm -rf "$$generator_dir"
+        unset GITLAB_TOKEN
+      }
+      trap cleanup EXIT
+
+      test -n "$$GITLAB_TOKEN"
+      echo "GitLab token received"
+      askpass="$$generator_dir/git-askpass"
+      printf '%s\n' '#!/bin/sh' 'printf "%s\n" "$$GITLAB_TOKEN"' > "$$askpass"
+      chmod 700 "$$askpass"
+      GIT_ASKPASS="$$askpass" GIT_TERMINAL_PROMPT=0 git clone --depth 1 https://axdoomer@gitlab.com/arctiq-team/alexandrelabonte/ci-pipeline-generation/ci-pipeline-generator.git "$$generator_dir/source"
+        echo "Generator cloned"
+      (
+        cd "$$generator_dir/source"
+        go build -o "$$generator_dir/pipeline-generator" ./cmd/pipeline-generator
+      )
+        echo "Generator built"
+      BUILDKITE=true PIPELINE_SHALLOW_CLONE=true "$$generator_dir/pipeline-generator" generated-buildkite.yml
+        echo "Buildkite pipeline generated"
+      buildkite-agent pipeline upload generated-buildkite.yml
+        echo "Buildkite pipeline uploaded"
+    plugins:
+      - docker#v5.12.0:
+          image: golang:1.25
+          user: root
+          mount-buildkite-agent: true
+          environment:
+            - GITLAB_TOKEN
