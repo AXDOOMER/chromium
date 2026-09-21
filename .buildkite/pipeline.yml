@@ -1,3 +1,7 @@
+env:
+  PIPELINE_IMAGE: chromium
+  PIPELINE_TAG: ci
+
 steps:
   - label: ":pipeline: Generate pipeline"
     key: generate-pipeline
