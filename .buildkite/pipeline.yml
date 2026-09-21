@@ -1,3 +1,7 @@
+env:
+  BUILDKITE_GIT_CLONE_FLAGS: "--depth 1"
+  BUILDKITE_GIT_FETCH_FLAGS: "-v --prune --depth 1"
+
 steps:
   - label: ":pipeline: Generate pipeline"
     key: generate-pipeline
