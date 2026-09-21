@@ -10,6 +10,8 @@ RUN git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git -
 ENV PATH="$PATH:/root/chromium_tools"
 ENV GCLIENT_SUPPRESS_GIT_VERSION_WARNING=1
 
+RUN /root/chromium_tools/ensure_bootstrap && /root/chromium_tools/python-bin/python3 --version
+
 WORKDIR /
 RUN fetch --nohooks --nohistory chromium
 
